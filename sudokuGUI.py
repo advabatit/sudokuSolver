@@ -11,7 +11,7 @@ class App:
         self.window = pygame.display.set_mode((WIDTH, HEIGHT))
         self.running = True
         self.grid = BOARD
-        self.temp_value = []
+        self.temp_values = {} # Key : Value -> (x, y) : temp_val
         self.selected = None
         self.mouse_pos = None
         self.state = "playing"
@@ -22,6 +22,7 @@ class App:
         self.end_buttons = []
         self.lock_cells = []
         self.incorrect_cells = []
+        self.errors = 0
         self.font = pygame.font.SysFont('comicsans', 40)
         solving(FINISHED_BOARD)
         self.load()
@@ -57,13 +58,19 @@ class App:
             
             # When the user type
             if event.type == pygame.KEYDOWN:
-                if self.selected != None and self.selected not in self.lock_cells: # Checking if the position is a blank rect
-                    if self.is_int(event.unicode): # Checking if the user entered a number 
-                        self.grid[self.selected[1]][self.selected[0]] = int(event.unicode)
+                if self.check_cell(event):
+                    self.temp_values[(self.selected[0], self.selected[1])] =  int(event.unicode) # temp_values[(x, y)] = num
+                    
+                #if event.key == pygame.K_RETURN:
+                    if FINISHED_BOARD[self.selected[1]][self.selected[0]] == int(event.unicode): # Checking if the entered number is correct
+                        print("Correct ans")
+                        self.grid[self.selected[1]][self.selected[0]] = int(event.unicode) # Adding to the board
+                        self.lock_cells.append([self.selected[0], self.selected[1]]) # Adding to the locked cell list
                         self.cell_changed = True
-            
-                if event.type == pygame.K_RETURN:
-                    pass
+                    else: # Otherwise it is an error
+                        print("Wrong ans")
+                        self.errors += 1
+                    
 
     
     # Function that updates the game (by user's mouse position/clicking on buttons etc)
@@ -76,7 +83,6 @@ class App:
         
         if self.cell_changed:
             if empty_pos(self.grid) is None:
-
                 pass
                 
                 
@@ -107,11 +113,21 @@ class App:
     # Input: window element
     # Output: Nothing
     def draw_numbers(self, window):
+        # Drawing all the correct numbers on the board
         for y_index, row in enumerate(self.grid):
             for x_index, num in enumerate(row):
-                if num != UNASSIGNED:
+                if num != UNASSIGNED:  
                     pos = [(x_index * CELL_SIZE) + X_GRID, (y_index * CELL_SIZE) + Y_GRID] # Getting the numbers position
-                    self.text_to_screen(self.window, str(num), pos) # Drawing the numbers
+                    self.text_to_screen(self.window, str(num), pos, 1) # Drawing the numbers
+
+                    # Deleting from the dict the values of the guessing so only the correct ans will apear on the screen
+                    if (x_index, y_index) in self.temp_values:
+                        del self.temp_values[(x_index, y_index)]
+        
+        # Drawing the user's guessing
+        for x_index, y_index in self.temp_values: 
+            pos = [(x_index * CELL_SIZE) + X_GRID, (y_index * CELL_SIZE) + Y_GRID]
+            self.text_to_screen(self.window, str(self.temp_values[x_index, y_index]), pos, 2)
 
 
     # Function that draws in light blue the selection cell
@@ -167,10 +183,10 @@ class App:
 
 
     # Function that puts the numbers on the screen
-    # Input: Window element, text string and position to put the text in
+    # Input: Window element, text string and position to put the text in and option (1 - correct ans, 2 - pencil option)
     # Output: Nothing
-    def text_to_screen(self, window, text : str, pos : list):
-        font = self.font.render(text, False, BLACK)
+    def text_to_screen(self, window, text : str, pos : list, option : int):
+        font = self.font.render(text, False, BLACK if option == 1 else PENCIL_GRAY)
         font_height = font.get_height()
         font_width = font.get_width()
         pos[0] += (CELL_SIZE - font_width) // 2
@@ -195,3 +211,14 @@ class App:
             return True
         except:
             return False
+
+
+    # Function that checks if the user chose a cell in the grid and if he entered a number
+    # Input: Nothing
+    # Output: True if he is on the grid and entered a number, false otherwise
+    def check_cell(self, event):
+        if self.selected != None and self.selected not in self.lock_cells: # Checking if the position is a blank rect
+            if self.is_int(event.unicode): # Checking if the user entered a number 
+                return True
+
+        return False

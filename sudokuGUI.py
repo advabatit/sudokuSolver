@@ -21,7 +21,6 @@ class App:
         self.menu_buttons = []
         self.end_buttons = []
         self.lock_cells = []
-        self.incorrect_cells = []
         self.errors = 0
         self.font = pygame.font.SysFont('comicsans', 40)
         solving(FINISHED_BOARD)
@@ -58,19 +57,23 @@ class App:
             
             # When the user type
             if event.type == pygame.KEYDOWN:
-                if self.check_cell(event):
-                    self.temp_values[(self.selected[0], self.selected[1])] =  int(event.unicode) # temp_values[(x, y)] = num
+                if self.selected != None and self.selected not in self.lock_cells: # Checking if the position is a blank rect
+                    if self.is_int(event.unicode): # Checking if the user entered a number 
+                        self.temp_values[(self.selected[0], self.selected[1])] =  int(event.unicode) # temp_values[(x, y)] = num
                     
-                #if event.key == pygame.K_RETURN:
-                    if FINISHED_BOARD[self.selected[1]][self.selected[0]] == int(event.unicode): # Checking if the entered number is correct
-                        print("Correct ans")
-                        self.grid[self.selected[1]][self.selected[0]] = int(event.unicode) # Adding to the board
-                        self.lock_cells.append([self.selected[0], self.selected[1]]) # Adding to the locked cell list
+                    elif event.key == pygame.K_BACKSPACE:
+                        del self.temp_values[(self.selected[0], self.selected[1])]
+
+                if event.key == pygame.K_KP_ENTER: 
+                    pos = (self.selected[0], self.selected[1])
+                    if FINISHED_BOARD[self.selected[1]][self.selected[0]] == self.temp_values[pos]: # Checking if the entered number is correct
+                        self.grid[self.selected[1]][self.selected[0]] = self.temp_values[pos] # Adding to the board
+                        self.lock_cells.append((pos[0], pos[1])) # Adding to the locked cell list
+                        del self.temp_values[pos] # Delete the value from the temp_values list -> value became permenent
                         self.cell_changed = True
                     else: # Otherwise it is an error
-                        print("Wrong ans")
                         self.errors += 1
-                    
+
 
     
     # Function that updates the game (by user's mouse position/clicking on buttons etc)
@@ -100,8 +103,9 @@ class App:
 
         self.shade_locked_cells(self.window, self.lock_cells)
         self.draw_numbers(self.window)
+        self.draw_errors(self.window, self.errors)
         
-        self.drawGrid(self.window)
+        self.draw_grid(self.window)
         pygame.display.update()
         pygame.display.set_caption('Sudoku')
         self.cell_changed = False
@@ -116,7 +120,7 @@ class App:
         # Drawing all the correct numbers on the board
         for y_index, row in enumerate(self.grid):
             for x_index, num in enumerate(row):
-                if num != UNASSIGNED:  
+                if num != UNASSIGNED:
                     pos = [(x_index * CELL_SIZE) + X_GRID, (y_index * CELL_SIZE) + Y_GRID] # Getting the numbers position
                     self.text_to_screen(self.window, str(num), pos, 1) # Drawing the numbers
 
@@ -125,10 +129,23 @@ class App:
                         del self.temp_values[(x_index, y_index)]
         
         # Drawing the user's guessing
-        for x_index, y_index in self.temp_values: 
+        for x_index, y_index in self.temp_values:
             pos = [(x_index * CELL_SIZE) + X_GRID, (y_index * CELL_SIZE) + Y_GRID]
             self.text_to_screen(self.window, str(self.temp_values[x_index, y_index]), pos, 2)
 
+
+    # Function that draws the number of errors the user have
+    # Input: The function gets the window element and the number of errors the user have
+    # Output: Nothing
+    def draw_errors(self, window, errors):
+        x_font = pygame.font.SysFont('comicsans', 30)
+        font = x_font.render('X', False, RED)
+        pos = [0,0]
+        for i in range(0, errors):
+            pos[0] = WIDTH - 515 + (i * 20)
+            pos[1] = HEIGHT - 40
+            window.blit(font, pos)
+            
 
     # Function that draws in light blue the selection cell
     # Input: window element and the selected position
@@ -140,7 +157,7 @@ class App:
     # Function that draws the grid on the window
     # Input: The window to draw on
     # Output: Nothing
-    def drawGrid(self, window):
+    def draw_grid(self, window):
         pygame.draw.rect(window, BLACK, (X_GRID, Y_GRID, WIDTH - X_GRID*2, HEIGHT - 150), THICKNESS)
         for x in range(1, BOARD_SIZE + 1):
             pygame.draw.line(window, BLACK, (X_GRID+(x*CELL_SIZE), Y_GRID), (X_GRID+(x*CELL_SIZE), 550), THICKNESS if x % 3 == 0 else 1)
@@ -213,12 +230,40 @@ class App:
             return False
 
 
-    # Function that checks if the user chose a cell in the grid and if he entered a number
-    # Input: Nothing
-    # Output: True if he is on the grid and entered a number, false otherwise
-    def check_cell(self, event):
-        if self.selected != None and self.selected not in self.lock_cells: # Checking if the position is a blank rect
-            if self.is_int(event.unicode): # Checking if the user entered a number 
-                return True
+# Function that solves the sudoku #
 
+    # Recursive function that solve the sudoku backtracking
+    # Input: List of the sudoku board
+    # Output: True if we finished the sudoku, False if need to change previous values
+    def solved_gui(self):
+        self.window.fill(WHITE)
+
+        for button in self.playing_buttons:
+            button.draw(self.window)
+
+        self.shade_locked_cells(self.window, self.lock_cells)
+        self.draw_grid(self.window)
+        pygame.display.update()
+        pygame.display.set_caption('Sudoku')
+
+        find = empty_pos(self.grid)
+        if not find:
+            return True
+        else: 
+            row, col = find
+
+        for i in range (1, BOARD_SIZE):
+            if check_validation(self.grid, (row, col), i):
+                self.grid[row][col] = i
+                self.draw_numbers(self.window)
+                pygame.delay(100)
+            
+                if self.solved_gui():
+                    return True
+            
+            self.grid[row][col] = 0
+            self.draw_numbers(self.window)
+            pygame.delay(100)
+        
         return False
+            

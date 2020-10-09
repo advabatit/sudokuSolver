@@ -4,6 +4,8 @@ from random import seed, randint
 from sudokuSolver import solving, check_validation, empty_pos
 from buttonClass import *
 from protocol import *
+from dataBase import DataBase
+from copy import deepcopy
 
 
 class App:
@@ -12,28 +14,34 @@ class App:
         pygame.init()
         self.window = pygame.display.set_mode((WIDTH, HEIGHT))
         self.running = True
-        self.grid = BOARD
+        self.grid = None
+        self.finished_board = None
         self.temp_values = {} # Key : Value -> (x, y) : temp_val
         self.selected = None
         self.mouse_pos = None
-        self.state = "playing"
+        self.state = "menu"
         self.caption = "Sudoku"
         self.screen_text = ""
         self.finished = False
         self.cell_changed = False
         self.error_msg = False
-        self.playing_buttons = []
         self.menu_buttons = []
+        self.playing_buttons = []
+        self.end_game_buttons = []
         self.lock_cells = []
         self.errors = 0
         self.hints = 3
         self.font = pygame.font.SysFont('comicsans', 40)
-        solving(FINISHED_BOARD)
-        self.load()
+        self.db = DataBase()
+        self.load_buttons()
 
 
     def run(self):
         while self.running:
+            if self.state == 'menu':
+                self.menu_events()
+                self.menu_update()
+                self.menu_draw()
             if self.state == 'playing':
                 self.playing_events()
                 self.playing_update()
@@ -44,6 +52,41 @@ class App:
                 self.game_over_draw()
         pygame.quit()
 
+
+# Menu state functions #
+    def menu_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+                
+            # When the user clicks
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                for button in self.menu_buttons:
+                    if button.highlighted:
+                        button.click()
+                        break
+
+
+    def menu_update(self):
+        self.mouse_pos = pygame.mouse.get_pos()
+        for button in self.menu_buttons:
+            button.update(self.mouse_pos)
+
+    def menu_draw(self):
+        self.window.fill(WHITE)
+
+        for button in self.menu_buttons:
+            button.draw(self.window)
+        
+        pygame.display.update()
+        pygame.display.set_caption(self.caption)
+
+    def get_board(self, level : int):
+        self.grid = self.db.get_rand_board(level)
+        self.finished_board = deepcopy(self.grid)
+        solving(self.finished_board)
+        self.load_board()
+        self.state = 'playing'
 
 # Playing state functions # 
 
@@ -68,8 +111,6 @@ class App:
                     for button in self.playing_buttons:
                         if button.highlighted:
                             button.click()
-
-            
             
             # When the user type
             if event.type == pygame.KEYDOWN:
@@ -82,7 +123,7 @@ class App:
 
                 if event.key == pygame.K_KP_ENTER:
                     pos = (self.selected[0], self.selected[1])
-                    if FINISHED_BOARD[self.selected[1]][self.selected[0]] == self.temp_values[pos]: # Checking if the entered number is correct
+                    if self.finished_board[self.selected[1]][self.selected[0]] == self.temp_values[pos]: # Checking if the entered number is correct
                         self.grid[self.selected[1]][self.selected[0]] = self.temp_values[pos] # Adding to the board
                         del self.temp_values[pos] # Delete the value from the temp_values list -> value became permenent
                         self.cell_changed = True
@@ -228,9 +269,7 @@ class App:
     # Function that loads information on the screen (buttons/locked numbers etc)
     # Input: Nothing
     # Output: Nothing
-    def load(self):
-        self.load_buttons()
-
+    def load_board(self):
         for y_index, row in enumerate(self.grid):
             for x_index, num in enumerate(row):
                 if num != UNASSIGNED:
@@ -241,6 +280,30 @@ class App:
     # Input: Nothing
     # Output: Nothing
     def load_buttons(self):
+
+        # MENU BOTTONS
+        self.menu_buttons.append(Button(200, 160, 200, 80,
+                                            function = self.get_board,
+                                            params = 0,
+                                            text = "Easy" ))
+        
+        self.menu_buttons.append(Button(200, 260, 200, 80, 
+                                            function  = self.get_board,
+                                            params = 1,
+                                            text = "Medium" ))
+
+        self.menu_buttons.append(Button(200, 360, 200, 80,
+                                            function = self.get_board,
+                                            params = 2,
+                                            text = "Hard" ))
+        
+        self.menu_buttons.append(Button(200, 460, 200, 80,
+                                            function  = self.get_board,
+                                            params = 3,
+                                            text = "Extreme" ))
+
+
+        # PLAYING BUTTONS
         self.playing_buttons.append(Button(20, 40, 100, 40,
                                             function = self.solved_gui,
                                             text = "Solve" ))
@@ -249,15 +312,15 @@ class App:
                                             function  = self.hint,
                                             text = "Hint" ))
 
-        # MENU BUTTONS
-        self.menu_buttons.append(Button(150, 350, 120, 60,
+        # END GAME BUTTONS
+        self.end_game_buttons.append(Button(150, 350, 120, 60,
                                             function = self.exit_game,
                                             colour = WHITE,
                                             highlighted_colour = PENCIL_GRAY,
                                             text = "Exit" ))
         
-        self.menu_buttons.append(Button(300, 350, 120, 60, 
-                                            function  = self.restart,
+        self.end_game_buttons.append(Button(300, 350, 120, 60, 
+                                            function  = self.try_again,
                                             colour = WHITE,
                                             highlighted_colour = PENCIL_GRAY,
                                             text = "Try Again" ))
@@ -311,7 +374,7 @@ class App:
         
         length = len(empty_lst) - 1
         rand_position = randint(0, length)
-        self.grid[empty_lst[rand_position][0]][empty_lst[rand_position][1]] = FINISHED_BOARD[empty_lst[rand_position][0]][empty_lst[rand_position][1]]
+        self.grid[empty_lst[rand_position][0]][empty_lst[rand_position][1]] = self.finished_board[empty_lst[rand_position][0]][empty_lst[rand_position][1]]
         self.hints -= 1
 
 
@@ -349,7 +412,7 @@ class App:
             
             # When the user clicks
             if event.type == pygame.MOUSEBUTTONDOWN:
-                for button in self.menu_buttons:
+                for button in self.end_game_buttons:
                     if button.highlighted:
                         button.click()
     
@@ -359,7 +422,7 @@ class App:
     # Output: Nothing
     def game_over_update(self):
         self.mouse_pos = pygame.mouse.get_pos()
-        for button in self.menu_buttons:
+        for button in self.end_game_buttons:
             button.update(self.mouse_pos)
 
 
@@ -369,7 +432,7 @@ class App:
     def game_over_draw(self, pos = [WIDTH - 500, HEIGHT - 350]):
         self.window.fill(BLACK)
         
-        for button in self.menu_buttons:
+        for button in self.end_game_buttons:
             button.draw(self.window)
         
         error_font = pygame.font.SysFont('comicsans', 100)
@@ -380,28 +443,23 @@ class App:
         pygame.display.set_caption(self.caption)
 
 
-    # Function that restarts the game
-    # Input: Nothing
-    # Output: Nothing
-    def restart(self):
+    def try_again(self):
         self.running = True
-        self.grid = BOARD
-        self.temp_values = {} 
+        self.grid = None
+        self.finished_board = None
+        self.temp_values = {} # Key : Value -> (x, y) : temp_val
         self.selected = None
         self.mouse_pos = None
-        self.state = "playing"
+        self.state = "menu"
         self.caption = "Sudoku"
         self.screen_text = ""
+        self.finished = False
         self.cell_changed = False
         self.error_msg = False
-        self.playing_buttons = []
-        self.menu_buttons = []
         self.lock_cells = []
         self.errors = 0
         self.hints = 3
-        self.font = pygame.font.SysFont('comicsans', 40)
-        self.load()
-
+        self.load_buttons()
 
     # Function that exit the game
     # Input: Nothing

@@ -32,7 +32,7 @@ class Button:
         window.blit(self.image, self.pos)
 
     def click(self):
-        if self.params:
+        if self.params == 0 or self.params:
             self.function(self.params)
         else:
             self.function()

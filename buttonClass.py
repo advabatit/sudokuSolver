@@ -1,8 +1,11 @@
 import pygame
+from protocol import BLACK, GRAY, LIGHT_GRAY
 
 class Button:
 
-    def __init__(self, x, y, width, height, text = None, colour = (73, 73, 73), highlighted_colour = (189, 189, 189), function = None, params = None):
+    def __init__(self, x, y, width, height, text = None, colour = GRAY, highlighted_colour = LIGHT_GRAY, function = None, params = None):
+        self.width = width
+        self.height = height
         self.image = pygame.Surface((width, height))
         self.pos = (x, y)
         self.rect = self.image.get_rect()
@@ -24,9 +27,24 @@ class Button:
     
     def draw(self, window):
         self.image.fill(self.highlighted_colour if self.highlighted else self.colour)
+        if self.text:
+            self.draw_text(self.text)
         window.blit(self.image, self.pos)
 
+    def click(self):
+        if self.params:
+            self.function(self.params)
+        else:
+            self.function()
 
+    
+    def draw_text(self, text : str):
+        font = pygame.font.SysFont('comicsans', 30, bold = 1)
+        text = font.render(text, False , BLACK)
+        width, height = text.get_size()
+        x = (self.width - width) // 2
+        y = (self.height - height) // 2
+        self.image.blit(text, (x, y))
 
 
 

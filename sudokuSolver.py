@@ -27,15 +27,16 @@ def empty_pos(sudoku_board : list) -> tuple:
 # Output: True if it is a valid number, False otherwise
 def check_validation(sudoku_board : list, position : tuple, num : int) -> bool:
     row, col = position
+    position = (position[0], position[1])
 
     # Check Row
     for i in range(BOARD_SIZE):
-        if sudoku_board[row][i] == num and (row, i) != (row, col):
+        if sudoku_board[row][i] == num and (row, i) != position:
             return False
 
     # Check column
     for i in range(BOARD_SIZE):
-        if sudoku_board[i][col] == num and (i, col) != (row, col):
+        if sudoku_board[i][col] == num and (i, col) != position:
             return False
 
     # Check Box
@@ -44,7 +45,7 @@ def check_validation(sudoku_board : list, position : tuple, num : int) -> bool:
 
     for i in range(row * 3, row * 3 + 3):
         for k in range (col * 3, col * 3 + 3):
-            if sudoku_board[i][k] == num and (i, k) != (row, col):
+            if sudoku_board[i][k] == num and (i, k) != position:
                 return False
  
     return True

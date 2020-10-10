@@ -67,36 +67,36 @@ class DataBase:
 
 
     
-    # Function that rands a board
+    # Function that sends a random board
+    # Input: The requested level
+    # Output: The board
     def get_rand_board(self, level : int) -> list:
-        rnd = -1
         if level == 0:
-            while(self.pre_game[level] == rnd or rnd == -1):
-                rnd = randint(0, len(self.easy) - 1)
-            
-            self.pre_game[level] = rnd
-            return self.easy[rnd]
+            return self.easy[self.rand_num(self.easy, level)]
 
         elif level == 1:
-            while(self.pre_game[level] == rnd or rnd == -1):
-                rnd = randint(0, len(self.medium) - 1)
-            
-            self.pre_game[level] = rnd
-            return self.medium[rnd]
+            return self.medium[self.rand_num(self.medium, level)]
 
         elif level == 2:
-            while(self.pre_game[level] == rnd or rnd == -1):
-                rnd = randint(0, len(self.hard) - 1)
-
-            self.pre_game[level] = rnd
-            return self.hard[rnd]
+            return self.hard[self.rand_num(self.hard, level)]
 
         elif level == 3:
-            while(self.pre_game[level] == rnd or rnd == -1):
-                rnd = randint(0, len(self.extreme) - 1)
-            
-            self.pre_game[level] = rnd
-            return self.extreme[rnd]
+            return self.extreme[self.rand_num(self.extreme, level)]
         
         print("Wrong level")
         return None
+
+
+    # Function that rands an index to the board, while checking if the user didn't play that board before.
+    # Input: The level list (easy, medium etx) and the level number (0, 1 etc)
+    # Output: The index of the random board
+    def rand_num(self, level_lst : list, level_num):
+        if len(level_lst) == 1: # If there is only one board no need to use wile loop
+            return 0
+
+        rnd = -1
+        while(self.pre_game[level_num] == rnd or rnd == -1):
+                rnd = randint(0, len(level_lst) - 1)
+        
+        self.pre_game[level_num] = rnd
+        return rnd

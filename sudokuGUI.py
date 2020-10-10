@@ -87,13 +87,13 @@ class App:
     # Input: Nothing
     # Output: Nothing
     def menu_draw(self):
-        self.window.fill(WHITE)
+        self.window.fill(BLACK)
 
         for button in self.menu_buttons:
             button.draw(self.window)
   
         menu_font = pygame.font.SysFont('comicsans', 100)
-        font = menu_font.render(self.screen_text, False, BLACK)
+        font = menu_font.render(self.screen_text, False, PINK)
         self.window.blit(font, [65, 50])
 
         pygame.display.update()
@@ -201,6 +201,47 @@ class App:
             self.game_over_draw()
 
 
+    # Function that responsible on the menu differen events (Exit the game or start over)
+    # Input: Nothing
+    # Output: Nothing
+    def game_over_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+            
+            # When the user clicks
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                for button in self.end_game_buttons:
+                    if button.highlighted:
+                        button.click()
+    
+
+    # Function that updates the menu (by user's mouse position/clicking on buttons etc)
+    # Input: Nothing
+    # Output: Nothing
+    def game_over_update(self):
+        self.mouse_pos = pygame.mouse.get_pos()
+        for button in self.end_game_buttons:
+            button.update(self.mouse_pos)
+
+
+    # Function that prints the user GAME OVER/YOU WIN screen
+    # Input: Nothing
+    # Output: Nothing
+    def game_over_draw(self, pos = [WIDTH - 500, HEIGHT - 350]):
+        self.window.fill(BLACK)
+        
+        for button in self.end_game_buttons:
+            button.draw(self.window)
+        
+        error_font = pygame.font.SysFont('comicsans', 100)
+        font = error_font.render(self.screen_text, False, PINK)
+        self.window.blit(font, pos)
+
+        pygame.display.update()
+        pygame.display.set_caption(self.caption)
+
+
 # Helper Functions #
 
     # Function that draws the numbers on the board
@@ -306,21 +347,25 @@ class App:
         self.menu_buttons.append(Button(200, 160, 200, 80,
                                             function = self.get_board,
                                             params = 0,
+                                            colour = WHITE,
                                             text = "Easy" ))
         
         self.menu_buttons.append(Button(200, 260, 200, 80, 
                                             function  = self.get_board,
                                             params = 1,
+                                            colour = WHITE,
                                             text = "Medium" ))
 
         self.menu_buttons.append(Button(200, 360, 200, 80,
                                             function = self.get_board,
                                             params = 2,
+                                            colour = WHITE,
                                             text = "Hard" ))
         
         self.menu_buttons.append(Button(200, 460, 200, 80,
                                             function  = self.get_board,
                                             params = 3,
+                                            colour = WHITE,
                                             text = "Extreme" ))
 
 
@@ -336,12 +381,14 @@ class App:
         # END GAME BUTTONS
         self.end_game_buttons.append(Button(150, 350, 120, 60,
                                             function = self.exit_game,
+                                            text_colour = PINK,
                                             colour = WHITE,
                                             highlighted_colour = PENCIL_GRAY,
                                             text = "Exit" ))
         
         self.end_game_buttons.append(Button(300, 350, 120, 60, 
                                             function  = self.try_again,
+                                            text_colour = PINK,
                                             colour = WHITE,
                                             highlighted_colour = PENCIL_GRAY,
                                             text = "Try Again" ))
@@ -422,46 +469,6 @@ class App:
         
         return False
 
-
-    # Function that responsible on the menu differen events (Exit the game or start over)
-    # Input: Nothing
-    # Output: Nothing
-    def game_over_events(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.running = False
-            
-            # When the user clicks
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                for button in self.end_game_buttons:
-                    if button.highlighted:
-                        button.click()
-    
-
-    # Function that updates the menu (by user's mouse position/clicking on buttons etc)
-    # Input: Nothing
-    # Output: Nothing
-    def game_over_update(self):
-        self.mouse_pos = pygame.mouse.get_pos()
-        for button in self.end_game_buttons:
-            button.update(self.mouse_pos)
-
-
-    # Function that prints the user GAME OVER/YOU WIN screen
-    # Input: Nothing
-    # Output: Nothing
-    def game_over_draw(self, pos = [WIDTH - 500, HEIGHT - 350]):
-        self.window.fill(BLACK)
-        
-        for button in self.end_game_buttons:
-            button.draw(self.window)
-        
-        error_font = pygame.font.SysFont('comicsans', 100)
-        font = error_font.render(self.screen_text, False, PINK)
-        self.window.blit(font, pos)
-
-        pygame.display.update()
-        pygame.display.set_caption(self.caption)
 
 
     def try_again(self):

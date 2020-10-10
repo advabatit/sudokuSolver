@@ -3,7 +3,7 @@ from protocol import BLACK, GRAY, LIGHT_GRAY
 
 class Button:
 
-    def __init__(self, x, y, width, height, text = None, colour = GRAY, highlighted_colour = LIGHT_GRAY, function = None, params = None):
+    def __init__(self, x, y, width, height, text = None, text_colour = BLACK, colour = GRAY, highlighted_colour = LIGHT_GRAY, function = None, params = None):
         self.width = width
         self.height = height
         self.image = pygame.Surface((width, height))
@@ -11,6 +11,7 @@ class Button:
         self.rect = self.image.get_rect()
         self.rect.topleft = self.pos
         self.text = text
+        self.text_colour = text_colour
         self.colour = colour 
         self.highlighted = False
         self.highlighted_colour = highlighted_colour
@@ -40,7 +41,7 @@ class Button:
     
     def draw_text(self, text : str):
         font = pygame.font.SysFont('comicsans', 30, bold = 1)
-        text = font.render(text, False , BLACK)
+        text = font.render(text, False , self.text_colour)
         width, height = text.get_size()
         x = (self.width - width) // 2
         y = (self.height - height) // 2

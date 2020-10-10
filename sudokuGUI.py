@@ -71,7 +71,7 @@ class App:
                 for button in self.menu_buttons:
                     if button.highlighted:
                         button.click()
-                        break
+                        
 
 
     # Function that updates the game (clicking on buttons etc)
@@ -133,6 +133,7 @@ class App:
                     for button in self.playing_buttons:
                         if button.highlighted:
                             button.click()
+                            break
             
             # When the user type
             if event.type == pygame.KEYDOWN:
@@ -485,7 +486,6 @@ class App:
         self.lock_cells = []
         self.errors = 0
         self.hints = 3
-        self.load_buttons()
 
     # Function that exit the game
     # Input: Nothing

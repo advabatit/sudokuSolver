@@ -21,7 +21,7 @@ class App:
         self.mouse_pos = None
         self.state = "menu"
         self.caption = "Sudoku"
-        self.screen_text = ""
+        self.screen_text = "Sudoku Game"
         self.finished = False
         self.cell_changed = False
         self.error_msg = False
@@ -42,18 +42,25 @@ class App:
                 self.menu_events()
                 self.menu_update()
                 self.menu_draw()
+
             if self.state == 'playing':
                 self.playing_events()
                 self.playing_update()
                 self.playing_draw()
+
             if self.state == 'win' or self.state == 'lose':
                 self.game_over_events()
                 self.game_over_update()
                 self.game_over_draw()
+
         pygame.quit()
 
 
 # Menu state functions #
+
+    # Function that responsible on the menu differen events
+    # Input: Nothing
+    # Output: Nothing
     def menu_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -67,20 +74,35 @@ class App:
                         break
 
 
+    # Function that updates the game (clicking on buttons etc)
+    # Input: nothing
+    # Output: Nothing
     def menu_update(self):
         self.mouse_pos = pygame.mouse.get_pos()
         for button in self.menu_buttons:
             button.update(self.mouse_pos)
 
+
+    # Function that draws the menu with the levels option
+    # Input: Nothing
+    # Output: Nothing
     def menu_draw(self):
         self.window.fill(WHITE)
 
         for button in self.menu_buttons:
             button.draw(self.window)
-        
+  
+        menu_font = pygame.font.SysFont('comicsans', 100)
+        font = menu_font.render(self.screen_text, False, BLACK)
+        self.window.blit(font, [65, 50])
+
         pygame.display.update()
         pygame.display.set_caption(self.caption)
 
+
+    # Function that randomly gets a board from the DataBase class and initiate variables by it
+    # Input: The level the user chose
+    # Output: Nothing
     def get_board(self, level : int):
         self.grid = self.db.get_rand_board(level)
         self.finished_board = deepcopy(self.grid)
@@ -144,8 +166,7 @@ class App:
                 self.state = 'win'
                 self.screen_text = 'You Win'
                 self.caption = 'Sudoku - Win screen'
-                self.game_over_draw()
-                
+                self.game_over_draw()   
                 
                 
     # Function that draw the game
@@ -452,7 +473,7 @@ class App:
         self.mouse_pos = None
         self.state = "menu"
         self.caption = "Sudoku"
-        self.screen_text = ""
+        self.screen_text = "Sudoku Game"
         self.finished = False
         self.cell_changed = False
         self.error_msg = False

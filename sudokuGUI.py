@@ -381,14 +381,12 @@ class App:
         # END GAME BUTTONS
         self.end_game_buttons.append(Button(150, 350, 120, 60,
                                             function = self.exit_game,
-                                            text_colour = PINK,
                                             colour = WHITE,
                                             highlighted_colour = PENCIL_GRAY,
                                             text = "Exit" ))
         
         self.end_game_buttons.append(Button(300, 350, 120, 60, 
                                             function  = self.try_again,
-                                            text_colour = PINK,
                                             colour = WHITE,
                                             highlighted_colour = PENCIL_GRAY,
                                             text = "Try Again" ))

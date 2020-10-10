@@ -2,7 +2,7 @@ import pygame
 import time
 from random import seed, randint
 from sudokuSolver import solving, check_validation, empty_pos
-from buttonClass import *
+from buttonClass import Button
 from protocol import *
 from dataBase import DataBase
 from copy import deepcopy
@@ -22,6 +22,8 @@ class App:
         self.state = "menu"
         self.caption = "Sudoku"
         self.screen_text = "Sudoku Game"
+        self.start = None
+        self.time = None
         self.finished = False
         self.cell_changed = False
         self.error_msg = False
@@ -70,8 +72,7 @@ class App:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 for button in self.menu_buttons:
                     if button.highlighted:
-                        button.click()
-                        
+                        button.click()    
 
 
     # Function that updates the game (clicking on buttons etc)
@@ -109,6 +110,7 @@ class App:
         solving(self.finished_board)
         self.load_board()
         self.state = 'playing'
+        self.start = time.time()
 
 # Playing state functions # 
 
@@ -176,24 +178,28 @@ class App:
     def playing_draw(self):
         self.window.fill(WHITE)
 
+        if self.start:
+            self.draw_time()
+
         for button in self.playing_buttons:
             button.draw(self.window)
 
         if self.selected: # Checking if there is a place that the user select
             self.draw_selection(self.window, self.selected)
 
-        self.shade_locked_cells(self.window, self.lock_cells)
-        self.draw_permenent_numbers(self.window)
-        self.draw_user_numbers(self.window)
-        self.draw_errors(self.window, self.errors)
+        if self.grid:
+            self.shade_locked_cells(self.window, self.lock_cells)
+            self.draw_permenent_numbers(self.window)
+            self.draw_user_numbers(self.window)
+            self.draw_errors(self.window, self.errors)
 
-        if self.error_msg:
-            self.draw_error_msg()
+            if self.error_msg:
+                self.draw_error_msg()
 
-        self.draw_grid(self.window)
-        pygame.display.update()
-        pygame.display.set_caption(self.caption)
-        self.cell_changed = False
+            self.draw_grid(self.window)
+            pygame.display.update()
+            pygame.display.set_caption(self.caption)
+            self.cell_changed = False
 
         if self.errors == 5:
             self.state = 'lose'
@@ -313,6 +319,28 @@ class App:
             pygame.draw.line(window, BLACK, (X_GRID, Y_GRID + (x*CELL_SIZE)), (WIDTH-X_GRID, Y_GRID + (x*CELL_SIZE)), THICKNESS if x % 3 == 0 else 1)
 
 
+    # Function that draws the time on the window
+    # Input: Nothing
+    # Output: Nothing
+    def draw_time(self):
+        self.time = round(time.time() - self.start)
+        time_font = pygame.font.SysFont("comicsans", 30)
+        text = time_font.render("Time: " + self.time_format(), 1, (0,0,0))
+        self.window.blit(text, (480, 5))
+
+    # Function that creating the time format
+    # Input: Nothing
+    # Output: Nothing
+    def time_format(self) -> str:
+        sec = self.time % 60
+        minute = self.time // 60
+        hour = minute // 60
+
+        if hour:
+            return str(hour) + ':' + str(minute) + ':' + str(sec)
+
+        return ' ' + str(minute) + ':' + str(sec)
+
     # Function that returns true if the mouse clicked on the grid, false otherwise
     # Input: Nothing
     # Output: True or False
@@ -378,6 +406,11 @@ class App:
         self.playing_buttons.append(Button(140, 40, 100, 40, 
                                             function  = self.hint,
                                             text = "Hint" ))
+        
+        self.playing_buttons.append(Button(260, 40, 100, 40, 
+                                            function = self.try_again, 
+                                            highlighted_colour = PENCIL_GRAY,
+                                            text = "Menu"))
 
         # END GAME BUTTONS
         self.end_game_buttons.append(Button(150, 350, 120, 60,
@@ -469,7 +502,9 @@ class App:
         return False
 
 
-
+    # Function that initiate values when the game starts over
+    # input: Nothing
+    # Output: Nothing
     def try_again(self):
         self.running = True
         self.grid = None
@@ -478,8 +513,11 @@ class App:
         self.selected = None
         self.mouse_pos = None
         self.state = "menu"
+        self.start = None
+        self.time = None
         self.caption = "Sudoku"
         self.screen_text = "Sudoku Game"
+        self.start = None
         self.finished = False
         self.cell_changed = False
         self.error_msg = False
